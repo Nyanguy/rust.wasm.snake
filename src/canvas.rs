@@ -45,4 +45,6 @@ impl Canvas {
             self.height*self.scale_h as f64
         );
     }
+
+
 }

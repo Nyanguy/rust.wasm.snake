@@ -3,6 +3,7 @@ extern crate stdweb;
 mod movement;
 mod canvas;
 mod snake;
+mod game;
 
 use canvas::Canvas;
 
