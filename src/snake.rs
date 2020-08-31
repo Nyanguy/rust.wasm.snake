@@ -72,7 +72,7 @@ pub struct Snake {
 }
 
 impl Snake {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(width: u32, height: u32) -> Snake {
         let head = Block::new(width, height);
         let tail= Vec::new();
         let food_pos = Block::new_relative(width, height, head, &tail);
@@ -99,25 +99,33 @@ impl Snake {
         }
     }
 
+    pub fn update_score(&self) {
+        stdweb::js! { @(no_return)
+                document.getElementById("score").innerHTML = "Score: " + @{self.score};
+            }
+    }
+
     pub fn update(&mut self) {
-        stdweb::console!(log,"Update");
         let direction = self.direction.unwrap_or(self.last_direction);
         self.last_direction = direction;
 
         let new_head = match direction {
             Direction::Up => Block(self.head.0 % self.width,
                                    self.head.1.checked_sub(1).unwrap_or(self.height - 1) % self.height),
-            Direction::Down => Block(self.head.0 % self.width, self.head.1 + 1 % self.height),
+            Direction::Down => Block(self.head.0 % self.width, (self.head.1 + 1) % self.height),
             Direction::Left => Block(self.head.0.checked_sub(1).unwrap_or(self.width - 1) % self.width,
                                      self.head.1 % self.height),
-            Direction::Right => Block(self.head.0 + 1 % self.width, self.head.1 % self.height),
+            Direction::Right => Block((self.head.0 + 1) % self.width, self.head.1 % self.height),
         };
 
         self.tail.insert(0, self.head);
 
         if self.tail.contains(&new_head) {
             self.running = false;
-            alert(format!("Game Over! Your score: {}", self.score).as_str())
+            alert(format!("Game Over! Your score: {}", self.score).as_str());
+            *self = Snake::new(self.width, self.height);
+            self.score = 0;
+            self.update_score();
         }
 
         self.head = new_head;
@@ -126,6 +134,7 @@ impl Snake {
             self.score += 1;
             self.food_type = rand::random();
             self.food_pos = Block::new_relative(self.width, self.height, self.head, &self.tail);
+            self.update_score();
         } else {
             self.tail.pop();
         }

@@ -1,23 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Wasm Snake</title>
-    <style>
-        #canvas {
-            outline: black 3px solid;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Wasm Snake</title>
+        <style>
+            .container {
+                display: flex;
+                justify-content: space-around;
+            }
 
-<body>
-<canvas id="canvas" width="800" height="800">
+            #canvas {
+                /*outline: black 3px solid;*/
+                box-shadow: #414141 0px 20px 20px;
+                border-radius: 10px;
+            }
 
-</canvas>
-<script src="snake.js"></script>
+            h1 {
+                text-shadow: 0px 7px 10px black;
+                color: white;
+                background-color: cadetblue;
+            }
+        </style>
+    </head>
 
-</body>
+    <body>
+        <div class="container">
+            <div>
+                <h1>🐍SNAKEY</h1>
+                <h3 id="score">Score: 0</h3>
+            </div>
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+        <script src="snake.js"></script>
+    </body>
 
 </html>
