@@ -9,6 +9,8 @@
 Well, for fun ofc. This project was an introduction to the **WASM** target platform. However, it was written with [stdweb](https://github.com/koute/stdweb) which is at the time of the current commit seems dead.
 Next **WASM** project will be surely written in the pure `WASM_BINGEN` which is the official way to go.
 
+[PLAY THE GAME](https://nyanguy.github.io/rust.wasm.snake/static/)
+
 
 ----
 
