@@ -1,11 +1,30 @@
-use stdweb::unstable::TryInto;
+use stdweb::web::alert;
 use crate::movement::Direction;
 use rand::Rng;
+use rand::distributions::{Distribution, Standard};
+use crate::canvas::Canvas;
+
 
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct Block(u32, u32);
+pub struct Block(u32, u32);
 
+impl Block {
+    pub fn new(max_w: u32, max_h: u32) -> Self {
+        let mut rng = rand::thread_rng();
+        Block(rng.gen_range(0, max_w), rng.gen_range(0, max_h))
+    }
+
+    pub fn new_relative(max_w: u32, max_h: u32, head: Block, others: &Vec<Block>) -> Self {
+        let mut food = Block::new(max_w, max_h);
+        while head == food || others.contains(&food) {
+            food = Block::new(max_w, max_h);
+        }
+        food
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Food {
     Apple,
     Orange,
@@ -13,10 +32,22 @@ pub enum Food {
     Cherry
 }
 
+impl Distribution<Food> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Food {
+        match rng.gen_range(0, 4) {
+            0 => Food::Apple,
+            1 => Food::Orange,
+            2 => Food::Pineapple,
+            _ => Food::Cherry,
+        }
+    }
+}
+
+
 impl Food {
-    fn get_color(&self) -> &str {
+    pub fn get_color(&self) -> &str {
         match self {
-            Food::Apple => "green",
+            Food::Apple => "red",
             Food::Orange => "orange",
             Food::Pineapple => "yellow",
             Food::Cherry => "purple"
@@ -25,77 +56,89 @@ impl Food {
 }
 
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Snake {
     pub head: Block,
     pub tail: Vec<Block>,
     width: u32,
     height: u32,
+    food_type: Food,
+    food_pos: Block,
     direction: Option<Direction>,
     next_direction: Option<Direction>,
-    last_direction: Direction
+    last_direction: Direction,
+    score: u32,
+    pub running: bool
 }
 
 impl Snake {
-    pub fn new(width: u32, height: u32, field_w: u32, field_h: u32) -> Self {
-        let mut rng = rand::thread_rng();
-        pos_x = rng.gen_range(0, field_w);
-        pos_y = rng.gen_range(0, field_h);
-
+    pub fn new(width: u32, height: u32) -> Self {
+        let head = Block::new(width, height);
+        let tail= Vec::new();
+        let food_pos = Block::new_relative(width, height, head, &tail);
         Snake {
-            head: Block(pos_x, pos_y),
-            tail: Vec::new(),
+            head,
+            tail,
             width,
             height,
+            food_type: rand::random(),
+            food_pos,
             direction: None,
             next_direction: None,
-            last_direction: Direction::Up
+            last_direction: Direction::Up,
+            score: 0,
+            running: true,
         }
-    }
-
-    pub fn check_overflow(&self, pos_x: u32, pos_y: u32) -> (u32, u32) {
-        let mut new_x = pos_x;
-        let mut new_y = pos_y;
-        if pos_x < 0 {
-            new_x = self.width;
-        } else if pos_x >= self.width {
-            new_x = 0;
-        }
-        if pos_y < 0 {
-            new_y = self.height;
-        } else if pos_y >= self.height {
-            new_y = 0;
-        }
-
-        (new_x, new_y)
     }
 
     pub fn change_direction(&mut self, direction: Direction) {
-        if self.direction.is_none() {
-            self.direction = Some(direction);
-        } else if !self.direction.is_opposite(direction) {
-            self.next_direction = Some(direction);
+        if self.direction.is_none() && !self.last_direction.is_opposite(direction) {
+            self.direction = Some(direction)
+        } else if self.direction.iter().any(|d| !d.is_opposite(direction)) {
+            self.next_direction = Some(direction)
         }
     }
 
     pub fn update(&mut self) {
+        stdweb::console!(log,"Update");
         let direction = self.direction.unwrap_or(self.last_direction);
         self.last_direction = direction;
 
         let new_head = match direction {
-            Direction::Up => Block(self.head.0 % self.width, self.head.1.checked_sub(1) % self.height),
+            Direction::Up => Block(self.head.0 % self.width,
+                                   self.head.1.checked_sub(1).unwrap_or(self.height - 1) % self.height),
             Direction::Down => Block(self.head.0 % self.width, self.head.1 + 1 % self.height),
-            Direction::Left => Block(self.head.0.checked_sub(1) % self.width, self.head.1 % self.height),
+            Direction::Left => Block(self.head.0.checked_sub(1).unwrap_or(self.width - 1) % self.width,
+                                     self.head.1 % self.height),
             Direction::Right => Block(self.head.0 + 1 % self.width, self.head.1 % self.height),
         };
 
         self.tail.insert(0, self.head);
-        self.tail.pop();
 
         if self.tail.contains(&new_head) {
-            // GAME OVER
+            self.running = false;
+            alert(format!("Game Over! Your score: {}", self.score).as_str())
         }
 
         self.head = new_head;
+
+        if self.head == self.food_pos {
+            self.score += 1;
+            self.food_type = rand::random();
+            self.food_pos = Block::new_relative(self.width, self.height, self.head, &self.tail);
+        } else {
+            self.tail.pop();
+        }
+        self.direction = self.next_direction.take();
+    }
+
+    pub fn render(&self, canvas: &Canvas) {
+        canvas.flush("white");
+        canvas.draw(self.head.0, self.head.1, "green");
+        for &Block(x, y) in &self.tail {
+            canvas.draw(x, y, "lightgreen");
+        }
+        canvas.draw(self.food_pos.0, self.food_pos.1, self.food_type.get_color());
     }
 
 }

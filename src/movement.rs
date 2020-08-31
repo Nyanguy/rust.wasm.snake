@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum Direction {
     Up,
     Down,
@@ -9,10 +9,10 @@ pub enum Direction {
 impl Direction {
     pub fn is_opposite(&self, other: Direction) -> bool {
         match other {
-            Direction::Up    => self == Direction::Down,
-            Direction::Down  => self == Direction::Up,
-            Direction::Left  => self == Direction::Right,
-            Direction::Right => self == Direction::Left,
+            Direction::Up    => *self == Direction::Down,
+            Direction::Down  => *self == Direction::Up,
+            Direction::Left  => *self == Direction::Right,
+            Direction::Right => *self == Direction::Left,
         }
     }
 }

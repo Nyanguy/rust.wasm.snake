@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 stdweb = "0.4.20"
-rand = "0.7.3"
+rand  = {version = "0.7.3",  features = ['stdweb']}

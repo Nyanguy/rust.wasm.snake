@@ -18,22 +18,23 @@ impl Canvas {
             .query_selector(id).unwrap().unwrap()
             .try_into().unwrap();
         let ctx: CanvasRenderingContext2d = canvas.get_context().unwrap();
-
+        let scale_h = canvas.height()/height;
+        let scale_w = canvas.width()/width;
         Canvas {
             canvas,
             ctx,
             width,
             height,
-            scale_h: canvas.height()/height,
-            scale_w: canvas.width()/width
+            scale_h,
+            scale_w
         }
     }
 
     pub fn draw(&self, x: u32, y: u32, color: &str) {
         self.ctx.set_fill_style_color(color);
 
-        let x = x*self.scale_w as f64;
-        let y = y*self.scale_h as f64;
+        let x = x as f64 * self.scale_w as f64;
+        let y = y as f64 * self.scale_h as f64;
 
         self.ctx.fill_rect(x, y, self.scale_w as f64, self.scale_h as f64);
     }
@@ -41,8 +42,8 @@ impl Canvas {
     pub fn flush(&self, color: &str) {
         self.ctx.set_fill_style_color(color);
         self.ctx.fill_rect(0.0, 0.0,
-            self.width*self.scale_w as f64,
-            self.height*self.scale_h as f64
+            self.width as f64 * self.scale_w as f64,
+            self.height as f64 * self.scale_h as f64
         );
     }
 
